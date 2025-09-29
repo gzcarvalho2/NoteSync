@@ -1,12 +1,10 @@
 package com.PI.NoteSync.entity;
 
 import jakarta.persistence.*;
-
 import java.util.List;
 
 @Entity
 @Table(name = "usuario")
-
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,18 +20,18 @@ public class Usuario {
     @Column(name = "usuario_status")
     private int status;
 
-    @Column(name = "usuario_senha")
-    private String senha;
+    // CORREÇÃO: Campo 'senha' removido
 
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Pasta> pastas;
 
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Nota> notas;
 
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Tag> tags;
 
+    // Getters e Setters
     public int getId() {
         return id;
     }
@@ -66,13 +64,7 @@ public class Usuario {
         this.status = status;
     }
 
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
+    // CORREÇÃO: Getters e Setters de 'senha' removidos
 
     public List<Pasta> getPastas() {
         return pastas;

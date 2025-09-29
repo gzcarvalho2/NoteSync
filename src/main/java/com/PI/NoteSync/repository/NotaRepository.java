@@ -12,19 +12,17 @@ import java.util.Optional;
 @Repository
 public interface NotaRepository extends JpaRepository<Nota, Integer> {
 
-    // Lista todas as notas de um usuário específico
-    @Query("SELECT n FROM Nota n WHERE n.usuario.id = :usuario_id")
-    List<Nota> listarNotasPorUsuario(@Param("usuario_id") Integer usuarioId);
+    // CORREÇÃO: O nome do parâmetro em @Param deve ser o mesmo usado na query com ":"
+    @Query("SELECT n FROM Nota n WHERE n.usuario.id = :usuarioId")
+    List<Nota> listarNotasPorUsuario(@Param("usuarioId") Integer usuarioId);
 
-    // Busca uma nota específica pelo seu ID
-    @Query("SELECT n FROM Nota n WHERE n.id = :nota_id")
-    Optional<Nota> obterNotaPeloId(@Param("id") Integer notaId);
+    // CORREÇÃO: O nome do parâmetro em @Param deve ser o mesmo usado na query com ":"
+    @Query("SELECT n FROM Nota n WHERE n.id = :id")
+    Optional<Nota> obterNotaPeloId(@Param("id") Integer id);
 
-    // Lista todas as notas dentro de uma pasta específica
-    @Query("SELECT n FROM Nota n WHERE n.pasta.id = :pasta_id")
-    List<Nota> listarNotasPorPasta(@Param("pasta_id") Integer pastaId);
+    @Query("SELECT n FROM Nota n WHERE n.pasta.id = :pastaId")
+    List<Nota> listarNotasPorPasta(@Param("pastaId") Integer pastaId);
 
-    // Lista todas as notas associadas a uma tag específica
-    @Query("SELECT n FROM Nota n JOIN n.tags t WHERE t.id = :tag_id")
-    List<Nota> listarNotasPorTag(@Param("tag_id") Integer tagId);
+    @Query("SELECT n FROM Nota n JOIN n.tags t WHERE t.id = :tagId")
+    List<Nota> listarNotasPorTag(@Param("tagId") Integer tagId);
 }

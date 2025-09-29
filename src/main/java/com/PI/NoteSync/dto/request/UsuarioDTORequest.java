@@ -12,7 +12,8 @@ public class UsuarioDTORequest {
     private String nome;
     private String email;
     private int status;
-    private String senha;
+
+    // CORREÇÃO: Campo 'senha' removido
 
     // Relacionamentos como no modelo
     private List<Pasta> pastas;
@@ -20,6 +21,9 @@ public class UsuarioDTORequest {
     private List<Tag> tags;
 
     // Getters e Setters
+    // ... (Getters e Setters de 'senha' também foram removidos)
+
+
     public int getId() {
         return id;
     }
@@ -50,14 +54,6 @@ public class UsuarioDTORequest {
 
     public void setStatus(int status) {
         this.status = status;
-    }
-
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
     }
 
     public List<Pasta> getPastas() {

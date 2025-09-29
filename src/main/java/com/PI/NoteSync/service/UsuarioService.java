@@ -5,8 +5,8 @@ import com.PI.NoteSync.dto.request.UsuarioDTOUpdateRequest;
 import com.PI.NoteSync.dto.response.UsuarioDTOResponse;
 import com.PI.NoteSync.dto.response.UsuarioDTOUpdateResponse;
 import com.PI.NoteSync.entity.Usuario;
-
 import com.PI.NoteSync.repository.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,12 +30,11 @@ public class UsuarioService {
     }
 
     public Usuario listarPorUsuarioId(Integer usuarioId){
-        // Usando o método que já filtra por status
-        return this.usuarioRepository.obterUsuarioPeloId(usuarioId).orElse(null);
+        return this.usuarioRepository.obterUsuarioPeloId(usuarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com o ID: " + usuarioId));
     }
 
     public UsuarioDTOResponse criarUsuario(UsuarioDTORequest usuarioDTORequest){
-        // Adicionar lógica de codificação de senha aqui antes de mapear
         Usuario usuario = modelMapper.map(usuarioDTORequest, Usuario.class);
         Usuario usuarioSalvo = this.usuarioRepository.save(usuario);
         return modelMapper.map(usuarioSalvo, UsuarioDTOResponse.class);
@@ -43,27 +42,25 @@ public class UsuarioService {
 
     public UsuarioDTOResponse atualizarUsuario(Integer usuarioId, UsuarioDTORequest usuarioDTORequest) {
         Usuario usuario = this.listarPorUsuarioId(usuarioId);
-        if (usuario != null) {
-            modelMapper.map(usuarioDTORequest, usuario);
-            Usuario tempResponse = usuarioRepository.save(usuario);
-            return modelMapper.map(tempResponse, UsuarioDTOResponse.class);
-        } else {
-            return null;
-        }
+
+        // Mapeia todos os campos do DTO (nome, email, status) para a entidade
+        modelMapper.map(usuarioDTORequest, usuario);
+
+        Usuario tempResponse = usuarioRepository.save(usuario);
+        return modelMapper.map(tempResponse, UsuarioDTOResponse.class);
     }
 
     public UsuarioDTOUpdateResponse atualizarStatusUsuario(Integer usuarioId, UsuarioDTOUpdateRequest usuarioDTOUpdateRequest) {
         Usuario usuario = this.listarPorUsuarioId(usuarioId);
-        if (usuario != null) {
-            usuario.setStatus(usuarioDTOUpdateRequest.getStatus());
-            Usuario tempResponse = usuarioRepository.save(usuario);
-            return modelMapper.map(tempResponse, UsuarioDTOUpdateResponse.class);
-        }
-        return null;
+        usuario.setStatus(usuarioDTOUpdateRequest.getStatus());
+        Usuario tempResponse = usuarioRepository.save(usuario);
+        return modelMapper.map(tempResponse, UsuarioDTOUpdateResponse.class);
     }
 
     public void apagarUsuario(Integer usuarioId){
-        // Chama o método de exclusão lógica do repositório
+        if (!usuarioRepository.existsById(usuarioId)) {
+            throw new EntityNotFoundException("Usuário não encontrado com o ID: " + usuarioId);
+        }
         usuarioRepository.apagadoLogicoUsuario(usuarioId);
     }
 }

@@ -1,3 +1,5 @@
+package com.PI.NoteSync.controller;
+
 import com.PI.NoteSync.dto.request.PastaDTORequest;
 import com.PI.NoteSync.dto.request.PastaDTOUpdateRequest;
 import com.PI.NoteSync.dto.response.PastaDTOResponse;
@@ -7,38 +9,46 @@ import com.PI.NoteSync.service.PastaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.modelmapper.ModelMapper; // CORREÇÃO: Importar ModelMapper
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors; // CORREÇÃO: Importar Collectors
 
 @RestController
 @RequestMapping("api/pasta")
 @Tag(name="Pasta", description = "API para gerenciamento de pastas de notas")
 public class PastaController {
 
-    private PastaService pastaService;
+    private final PastaService pastaService;
+    private final ModelMapper modelMapper; // CORREÇÃO: Injetar ModelMapper
 
-    public PastaController(PastaService pastaService) {
+    // CORREÇÃO: Atualizar construtor
+    public PastaController(PastaService pastaService, ModelMapper modelMapper) {
         this.pastaService = pastaService;
+        this.modelMapper = modelMapper;
     }
 
     @GetMapping("/listar")
-    @Operation(summary = "Listar pastas", description = "Endpoint para listar todas as pastas do usuário autenticado")
-    public ResponseEntity<List<Pasta>> listarPastas(){
-        return ResponseEntity.ok(pastaService.listarPastas());
+    @Operation(summary = "Listar pastas por usuário", description = "Endpoint para listar todas as pastas de um usuário específico")
+    // CORREÇÃO: Retornar uma lista de DTOs e receber o ID do usuário como parâmetro
+    public ResponseEntity<List<PastaDTOResponse>> listarPastas(@RequestParam Integer usuarioId){
+        List<Pasta> pastas = pastaService.listarPastas(usuarioId);
+        List<PastaDTOResponse> response = pastas.stream()
+                .map(pasta -> modelMapper.map(pasta, PastaDTOResponse.class))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/listarPorId/{pastaId}")
     @Operation(summary = "Listar pasta pelo ID", description = "Endpoint para obter Pasta pelo seu id")
-    public ResponseEntity<Pasta> listarPorPastaId(@PathVariable("pastaId") Integer pastaId) {
+    // CORREÇÃO: Retornar o DTO de resposta para evitar o loop de relacionamento
+    public ResponseEntity<PastaDTOResponse> listarPorPastaId(@PathVariable("pastaId") Integer pastaId) {
         Pasta pasta = pastaService.listarPorPastaId(pastaId);
-        if (pasta == null) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.ok(pasta);
-        }
+        // A verificação de nulo não é mais necessária, pois o service lança uma exceção
+        return ResponseEntity.ok(modelMapper.map(pasta, PastaDTOResponse.class));
     }
 
     @PostMapping("/criar")
@@ -63,7 +73,8 @@ public class PastaController {
 
     @DeleteMapping("/apagar/{pastaId}")
     @Operation(summary = "Apagar registro de pasta", description = "Endpoint para apagar uma pasta")
-    public ResponseEntity apagarPasta(@PathVariable("pastaId") Integer pastaId){
+    // CORREÇÃO: ResponseEntity<Void> é um tipo de retorno mais explícito para 'no content'
+    public ResponseEntity<Void> apagarPasta(@PathVariable("pastaId") Integer pastaId){
         pastaService.apagarPasta(pastaId);
         return ResponseEntity.noContent().build();
     }

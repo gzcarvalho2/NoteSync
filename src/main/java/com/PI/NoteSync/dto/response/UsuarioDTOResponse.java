@@ -1,25 +1,28 @@
 package com.PI.NoteSync.dto.response;
 
-import com.PI.NoteSync.entity.Nota;
-import com.PI.NoteSync.entity.Pasta;
-import com.PI.NoteSync.entity.Tag;
+// CORREÇÃO: Importar os DTOs das outras entidades
+import com.PI.NoteSync.dto.response.NotaDTOResponse;
+import com.PI.NoteSync.dto.response.PastaDTOResponse;
+import com.PI.NoteSync.dto.response.TagDTOResponse;
 
 import java.util.List;
+import java.util.Set; // Tag usa Set, vamos manter a consistência
 
 public class UsuarioDTOResponse {
-
     private int id;
     private String nome;
     private String email;
     private int status;
-    private String senha;
 
-    // Relacionamentos como no modelo
-    private List<Pasta> pastas;
-    private List<Nota> notas;
-    private List<Tag> tags;
+    // Campo 'senha' já havia sido removido (correto)
 
-    // Getters e Setters
+    private List<PastaDTOResponse> pastas;
+    private List<NotaDTOResponse> notas;
+    private Set<TagDTOResponse> tags;
+
+    // Getters e Setters ...
+
+
     public int getId() {
         return id;
     }
@@ -52,35 +55,27 @@ public class UsuarioDTOResponse {
         this.status = status;
     }
 
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
-
-    public List<Pasta> getPastas() {
+    public List<PastaDTOResponse> getPastas() {
         return pastas;
     }
 
-    public void setPastas(List<Pasta> pastas) {
+    public void setPastas(List<PastaDTOResponse> pastas) {
         this.pastas = pastas;
     }
 
-    public List<Nota> getNotas() {
+    public List<NotaDTOResponse> getNotas() {
         return notas;
     }
 
-    public void setNotas(List<Nota> notas) {
+    public void setNotas(List<NotaDTOResponse> notas) {
         this.notas = notas;
     }
 
-    public List<Tag> getTags() {
+    public Set<TagDTOResponse> getTags() {
         return tags;
     }
 
-    public void setTags(List<Tag> tags) {
+    public void setTags(Set<TagDTOResponse> tags) {
         this.tags = tags;
     }
 }

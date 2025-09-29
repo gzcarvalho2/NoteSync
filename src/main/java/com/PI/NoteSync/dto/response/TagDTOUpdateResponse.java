@@ -1,6 +1,7 @@
 package com.PI.NoteSync.dto.response;
 
-import com.PI.NoteSync.entity.Nota;
+// CORREÇÃO: Importar o DTO de Nota em vez da Entidade
+import com.PI.NoteSync.dto.response.NotaDTOResponse;
 import com.PI.NoteSync.entity.Usuario;
 
 import java.util.Set;
@@ -12,9 +13,10 @@ public class TagDTOUpdateResponse {
 
     // Relacionamentos
     private Usuario usuario;
-    private Set<Nota> notas;
 
-    // Getters e Setters
+
+    private Set<NotaDTOResponse> notas;
+
     public int getId() {
         return id;
     }
@@ -39,11 +41,11 @@ public class TagDTOUpdateResponse {
         this.usuario = usuario;
     }
 
-    public Set<Nota> getNotas() {
+    public Set<NotaDTOResponse> getNotas() {
         return notas;
     }
 
-    public void setNotas(Set<Nota> notas) {
+    public void setNotas(Set<NotaDTOResponse> notas) {
         this.notas = notas;
     }
 }

@@ -1,5 +1,7 @@
 package com.PI.NoteSync.entity;
 
+// CORREÇÃO: Adicionar import para FetchType
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.Set;
 
@@ -15,14 +17,15 @@ public class Tag {
     @Column(name = "tag_nome")
     private String nome;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
-    @ManyToMany(mappedBy = "tags")
+
+    @ManyToMany(mappedBy = "tags", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Nota> notas;
 
-    // Getters e Setters
 
     public int getId() {
         return id;

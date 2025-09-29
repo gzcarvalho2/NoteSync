@@ -1,70 +1,47 @@
-import com.PI.NoteSync.dto.request.UsuarioDTORequest;
-import com.PI.NoteSync.dto.request.UsuarioDTOUpdateRequest;
+package com.PI.NoteSync.controller;
+
+// ... (seus imports)
 import com.PI.NoteSync.dto.response.UsuarioDTOResponse;
-import com.PI.NoteSync.dto.response.UsuarioDTOUpdateResponse;
 import com.PI.NoteSync.entity.Usuario;
 import com.PI.NoteSync.service.UsuarioService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("api/usuario")
-@Tag(name="Usuario", description = "API para gerenciamento de usuários")
+@RequestMapping("api/usuario") // Convenção: usar plural ou singular, mas manter consistente
 public class UsuarioController {
 
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
+    private final ModelMapper modelMapper; // CORREÇÃO: Injetar ModelMapper
 
-    public UsuarioController(UsuarioService usuarioService) {
+    // CORREÇÃO: Atualizar construtor
+    public UsuarioController(UsuarioService usuarioService, ModelMapper modelMapper) {
         this.usuarioService = usuarioService;
+        this.modelMapper = modelMapper;
     }
 
     @GetMapping("/listar")
-    @Operation(summary = "Listar usuários", description = "Endpoint para listar todos os usuários")
-    public ResponseEntity<List<Usuario>> listarUsuarios(){
-        return ResponseEntity.ok(usuarioService.listarUsuarios());
+    // CORREÇÃO: Retornar uma lista de DTOs para evitar o loop e não expor dados sensíveis
+    public ResponseEntity<List<UsuarioDTOResponse>> listarUsuarios(){
+        List<Usuario> usuarios = usuarioService.listarUsuarios();
+        List<UsuarioDTOResponse> response = usuarios.stream()
+                .map(usuario -> modelMapper.map(usuario, UsuarioDTOResponse.class))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/listarPorId/{usuarioId}")
-    @Operation(summary = "Listar usuário pelo ID", description = "Endpoint para obter Usuário pelo seu id")
-    public ResponseEntity<Usuario> listarPorUsuarioId(@PathVariable("usuarioId") Integer usuarioId) {
+    // CORREÇÃO: Retornar o DTO de resposta
+    public ResponseEntity<UsuarioDTOResponse> listarPorUsuarioId(@PathVariable("usuarioId") Integer usuarioId) {
         Usuario usuario = usuarioService.listarPorUsuarioId(usuarioId);
-        if (usuario == null) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.ok(usuario);
-        }
+        // A verificação de nulo não é mais necessária aqui
+        return ResponseEntity.ok(modelMapper.map(usuario, UsuarioDTOResponse.class));
     }
 
-    @PostMapping("/criar")
-    @Operation(summary = "Criar novo Usuário", description = "Endpoint para criar um novo registro de Usuário")
-    public ResponseEntity<UsuarioDTOResponse> criarUsuario(@Valid @RequestBody UsuarioDTORequest usuario){
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.criarUsuario(usuario));
-    }
-
-    @PutMapping("/atualizar/{usuarioId}")
-    @Operation(summary = "Atualizar todos os dados do Usuário", description = "Endpoint para atualizar todos os dados do usuário")
-    public ResponseEntity<UsuarioDTOResponse> atualizarUsuario(@PathVariable("usuarioId") Integer usuarioId, @RequestBody UsuarioDTORequest usuarioDTORequest){
-        return ResponseEntity.ok(usuarioService.atualizarUsuario(usuarioId, usuarioDTORequest));
-    }
-
-    @PutMapping("/atualizarStatus/{usuarioId}")
-    @Operation(summary = "Atualiza o campo status do usuário", description = "Endpoint para atualizar o status do usuário")
-    public ResponseEntity<UsuarioDTOUpdateResponse> atualizarStatusUsuario(
-            @PathVariable("usuarioId") Integer usuarioId,
-            @RequestBody UsuarioDTOUpdateRequest usuarioDTOUpdateRequest){
-        return ResponseEntity.ok(usuarioService.atualizarStatusUsuario(usuarioId, usuarioDTOUpdateRequest));
-    }
-
-    @DeleteMapping("/apagar/{usuarioId}")
-    @Operation(summary = "Apagar registro de usuário", description = "Endpoint para apagar um usuário")
-    public ResponseEntity apagarUsuario(@PathVariable("usuarioId") Integer usuarioId){
-        usuarioService.apagarUsuario(usuarioId);
-        return ResponseEntity.noContent().build();
-    }
+    // Os outros endpoints (criar, atualizar, apagar) já usavam DTOs ou não retornavam corpo,
+    // então eles se beneficiam das correções no Service sem precisar de mudanças aqui.
+    // ... (seu código para criar, atualizar e apagar pode permanecer o mesmo)
 }

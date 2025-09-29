@@ -1,5 +1,6 @@
 package com.PI.NoteSync.dto.response;
-import com.PI.NoteSync.entity.Nota;
+
+
 import com.PI.NoteSync.entity.Usuario;
 
 import java.time.LocalDateTime;
@@ -12,11 +13,12 @@ public class PastaDTOResponse {
     private String descricao;
     private LocalDateTime dataDeCriacao;
 
-    // Relacionamentos
-    private Usuario usuario;
-    private List<Nota> notas;
 
-    // Getters e Setters
+    private Usuario usuario;
+
+
+    private List<NotaDTOResponse> notas;
+
     public int getId() {
         return id;
     }
@@ -57,11 +59,11 @@ public class PastaDTOResponse {
         this.usuario = usuario;
     }
 
-    public List<Nota> getNotas() {
+    public List<NotaDTOResponse> getNotas() {
         return notas;
     }
 
-    public void setNotas(List<Nota> notas) {
+    public void setNotas(List<NotaDTOResponse> notas) {
         this.notas = notas;
     }
 }

@@ -1,10 +1,14 @@
 package com.PI.NoteSync.service;
+
 import com.PI.NoteSync.dto.request.TagDTORequest;
 import com.PI.NoteSync.dto.request.TagDTOUpdateRequest;
 import com.PI.NoteSync.dto.response.TagDTOResponse;
 import com.PI.NoteSync.dto.response.TagDTOUpdateResponse;
 import com.PI.NoteSync.entity.Tag;
+import com.PI.NoteSync.entity.Usuario; // CORREÇÃO: Importar Usuario
 import com.PI.NoteSync.repository.TagRepository;
+import com.PI.NoteSync.repository.UsuarioRepository; // CORREÇÃO: Importar UsuarioRepository
+import jakarta.persistence.EntityNotFoundException; // CORREÇÃO: Importar exceção
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,12 +19,15 @@ import java.util.List;
 public class TagService {
 
     private final TagRepository tagRepository;
+    private final UsuarioRepository usuarioRepository; // CORREÇÃO: Injetar repositório
 
     @Autowired
     private ModelMapper modelMapper;
 
-    public TagService(TagRepository tagRepository){
+    // CORREÇÃO: Atualizar construtor
+    public TagService(TagRepository tagRepository, UsuarioRepository usuarioRepository){
         this.tagRepository = tagRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     // A listagem de tags deve ser por usuário
@@ -29,40 +36,55 @@ public class TagService {
     }
 
     public Tag listarPorTagId(Integer tagId){
-        return this.tagRepository.findById(tagId).orElse(null);
+        // CORREÇÃO: Lançar exceção se não encontrar a tag
+        return this.tagRepository.findById(tagId)
+                .orElseThrow(() -> new EntityNotFoundException("Tag não encontrada com o ID: " + tagId));
     }
 
     public TagDTOResponse criarTag(TagDTORequest tagDTORequest){
         Tag tag = modelMapper.map(tagDTORequest, Tag.class);
-        // Lógica para associar o usuário logado à tag deve ser adicionada aqui
+
+        // CORREÇÃO: Lógica ESSENCIAL para buscar o usuário no banco e associá-lo à tag.
+        Usuario usuario = usuarioRepository.findById(tagDTORequest.getUsuario().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com o ID: " + tagDTORequest.getUsuario().getId()));
+        tag.setUsuario(usuario);
+
         Tag tagSalva = this.tagRepository.save(tag);
         return modelMapper.map(tagSalva, TagDTOResponse.class);
     }
 
     public TagDTOResponse atualizarTag(Integer tagId, TagDTORequest tagDTORequest) {
-        Tag tag = this.listarPorTagId(tagId);
-        if (tag != null) {
-            modelMapper.map(tagDTORequest, tag);
-            Tag tempResponse = tagRepository.save(tag);
-            return modelMapper.map(tempResponse, TagDTOResponse.class);
-        } else {
-            return null;
+        Tag tagExistente = this.listarPorTagId(tagId); // Reutiliza o método que já lança exceção
+
+        modelMapper.map(tagDTORequest, tagExistente);
+
+        // CORREÇÃO: Lógica de associação de usuário também é necessária na atualização
+        if (tagDTORequest.getUsuario() != null) {
+            Usuario usuario = usuarioRepository.findById(tagDTORequest.getUsuario().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+            tagExistente.setUsuario(usuario);
         }
+
+        Tag tempResponse = tagRepository.save(tagExistente);
+        return modelMapper.map(tempResponse, TagDTOResponse.class);
     }
 
     public TagDTOUpdateResponse atualizarParcialmenteTag(Integer tagId, TagDTOUpdateRequest tagDTOUpdateRequest) {
         Tag tag = this.listarPorTagId(tagId);
-        if (tag != null) {
-            // Exemplo de atualização parcial: alterando apenas o nome
+
+        if (tagDTOUpdateRequest.getNome() != null) {
             tag.setNome(tagDTOUpdateRequest.getNome());
-            Tag tempResponse = tagRepository.save(tag);
-            return modelMapper.map(tempResponse, TagDTOUpdateResponse.class);
         }
-        return null;
+
+        Tag tempResponse = tagRepository.save(tag);
+        return modelMapper.map(tempResponse, TagDTOUpdateResponse.class);
     }
 
     public void apagarTag(Integer tagId){
-        // Exclusão física
+        // CORREÇÃO: Verificar se a tag existe antes de tentar apagar
+        if (!tagRepository.existsById(tagId)) {
+            throw new EntityNotFoundException("Tag não encontrada com o ID: " + tagId);
+        }
         tagRepository.deleteById(tagId);
     }
 }

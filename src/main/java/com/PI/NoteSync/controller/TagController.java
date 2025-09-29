@@ -1,3 +1,5 @@
+package com.PI.NoteSync.controller;
+
 import com.PI.NoteSync.dto.request.TagDTORequest;
 import com.PI.NoteSync.dto.request.TagDTOUpdateRequest;
 import com.PI.NoteSync.dto.response.TagDTOResponse;
@@ -6,38 +8,46 @@ import com.PI.NoteSync.entity.Tag;
 import com.PI.NoteSync.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import org.modelmapper.ModelMapper; // CORREÇÃO: Importar ModelMapper
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors; // CORREÇÃO: Importar Collectors
 
 @RestController
 @RequestMapping("api/tag")
 @io.swagger.v3.oas.annotations.tags.Tag(name="Tag", description = "API para gerenciamento de tags")
 public class TagController {
 
-    private TagService tagService;
+    private final TagService tagService;
+    private final ModelMapper modelMapper; // CORREÇÃO: Injetar ModelMapper
 
-    public TagController(TagService tagService) {
+    // CORREÇÃO: Atualizar construtor
+    public TagController(TagService tagService, ModelMapper modelMapper) {
         this.tagService = tagService;
+        this.modelMapper = modelMapper;
     }
 
     @GetMapping("/listar")
-    @Operation(summary = "Listar tags", description = "Endpoint para listar todas as tags do usuário autenticado")
-    public ResponseEntity<List<Tag>> listarTags(){
-        return ResponseEntity.ok(tagService.listarTags());
+    @Operation(summary = "Listar tags por usuário", description = "Endpoint para listar todas as tags de um usuário específico")
+    // CORREÇÃO: Retornar uma lista de DTOs e receber o ID do usuário como parâmetro
+    public ResponseEntity<List<TagDTOResponse>> listarTags(@RequestParam Integer usuarioId){
+        List<Tag> tags = tagService.listarTags(usuarioId);
+        List<TagDTOResponse> response = tags.stream()
+                .map(tag -> modelMapper.map(tag, TagDTOResponse.class))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/listarPorId/{tagId}")
     @Operation(summary = "Listar tag pelo ID", description = "Endpoint para obter Tag pelo seu id")
-    public ResponseEntity<Tag> listarPorTagId(@PathVariable("tagId") Integer tagId) {
+    // CORREÇÃO: Retornar o DTO de resposta para evitar o loop de relacionamento
+    public ResponseEntity<TagDTOResponse> listarPorTagId(@PathVariable("tagId") Integer tagId) {
         Tag tag = tagService.listarPorTagId(tagId);
-        if (tag == null) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.ok(tag);
-        }
+        // A verificação de nulo não é mais necessária, pois o service lança uma exceção
+        return ResponseEntity.ok(modelMapper.map(tag, TagDTOResponse.class));
     }
 
     @PostMapping("/criar")
@@ -62,7 +72,8 @@ public class TagController {
 
     @DeleteMapping("/apagar/{tagId}")
     @Operation(summary = "Apagar registro de tag", description = "Endpoint para apagar uma tag")
-    public ResponseEntity apagarTag(@PathVariable("tagId") Integer tagId){
+    // CORREÇÃO: ResponseEntity<Void> é um tipo de retorno mais explícito
+    public ResponseEntity<Void> apagarTag(@PathVariable("tagId") Integer tagId){
         tagService.apagarTag(tagId);
         return ResponseEntity.noContent().build();
     }

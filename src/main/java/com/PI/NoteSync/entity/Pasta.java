@@ -1,6 +1,8 @@
 package com.PI.NoteSync.entity;
 
 import jakarta.persistence.*;
+// CORREÇÃO: Adicionar import para FetchType
+import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,15 +21,23 @@ public class Pasta {
     @Column(name = "pasta_descricao")
     private String descricao;
 
-    @Column(name = "pasta_datadecriacao")
+    // CORREÇÃO: Deixar o Hibernate gerenciar a data de criação automaticamente
+    @CreationTimestamp
+    @Column(name = "pasta_datadecriacao", updatable = false)
     private LocalDateTime dataDeCriacao;
 
-    @ManyToOne
+    // CORREÇÃO: Adicionar FetchType.LAZY para otimizar a performance
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
-    @OneToMany(mappedBy = "pasta")
+    // CORREÇÃO: Cascade ALL garante que as notas sejam salvas/apagadas junto com a pasta
+    @OneToMany(mappedBy = "pasta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Nota> notas;
+
+    // Getters e Setters ...
+    // (Omitidos para brevidade)
+
 
     public int getId() {
         return id;
