@@ -20,6 +20,9 @@ public class Usuario {
     @Column(name = "usuario_status")
     private int status;
 
+    @Column(name = "usuario_senha")
+    private String senha;
+
     // CORREÇÃO: Campo 'senha' removido
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -30,6 +33,12 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Tag> tags;
+
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+    @JoinTable(name="users_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name="role_id"))
+    private List<Role> roles;
 
     // Getters e Setters
     public int getId() {
@@ -88,5 +97,21 @@ public class Usuario {
 
     public void setTags(List<Tag> tags) {
         this.tags = tags;
+    }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public void setSenha(String senha) {
+        this.senha = senha;
     }
 }
