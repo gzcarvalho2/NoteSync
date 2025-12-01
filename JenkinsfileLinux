@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Verificar Repositório') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], useRemoteConfigs: [[url: 'https://github.com/gzcarvalho2/NoteSync.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], useRemoteConfigs: [[url: 'https://github.com/gzcarvalho2/NoteSync.git']]])
             }
         }
 
@@ -14,11 +14,6 @@ pipeline {
                     env.PATH = "/usr/bin:$PATH"
                     // Instalar as dependências Maven antes de compilar o projeto
                     sh 'mvn clean install'  // Instala as dependências do Maven
-
-                    //dir('subpasta') {
-                    //  sh "docker build -t ${imageTag} ."
-                    //}
-
                 }
             }
         }
@@ -31,10 +26,6 @@ pipeline {
 
                     // Construir a imagem Docker
                     sh "docker build -t ${imageTag} ."
-
-                    //dir('subpasta') {
-                    //  sh "docker build -t ${imageTag} ."
-                    //}
                 }
             }
         }
@@ -50,7 +41,8 @@ pipeline {
             		sh "docker rm -v ${appName} || exit 0"  // Remover o container e os volumes associados
 
                     // Executar o novo container
-                    sh "docker-compose up -d --build"
+                    sh "docker run -d --name ${appName} -p 8424:8424 ${imageTag}"
+
                 }
             }
         }
