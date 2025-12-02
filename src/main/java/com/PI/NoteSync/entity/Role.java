@@ -3,13 +3,15 @@ package com.PI.NoteSync.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name="roles")
+@Table(name="role")
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "role_id") // <--- COLOQUE O NOME EXATO QUE ESTÁ NO BANCO
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "role_name") // <--- Confira se no banco é 'name' ou 'role_name'
     private RoleName name;
 
     public Long getId() {

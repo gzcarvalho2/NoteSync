@@ -1,36 +1,30 @@
 package com.PI.NoteSync.dto.request;
 
-import com.PI.NoteSync.entity.Nota;
-import com.PI.NoteSync.entity.Pasta;
-import com.PI.NoteSync.entity.Tag;
-
-import java.util.List;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class UsuarioDTORequest {
 
-    private int id;
+    // Removemos 'id' (gerado automático)
+    // Removemos 'status' (definimos como ativo no service)
+    // Removemos as Listas (usuário novo começa vazio)
+
+    @NotBlank(message = "O nome é obrigatório")
     private String nome;
+
+    @NotBlank(message = "O email é obrigatório")
+    @Email(message = "Formato de email inválido")
     private String email;
-    private int status;
 
-    // CORREÇÃO: Campo 'senha' removido
+    @NotBlank(message = "A senha é obrigatória")
+    @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
+    private String password;
 
-    // Relacionamentos como no modelo
-    private List<Pasta> pastas;
-    private List<Nota> notas;
-    private List<Tag> tags;
+    // Opcional: Se você quiser permitir que criem ADMINs via API, adicione:
+    // private RoleName role;
 
-    // Getters e Setters
-    // ... (Getters e Setters de 'senha' também foram removidos)
-
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
+    // --- Getters e Setters ---
 
     public String getNome() {
         return nome;
@@ -48,35 +42,11 @@ public class UsuarioDTORequest {
         this.email = email;
     }
 
-    public int getStatus() {
-        return status;
+    public String getPassword() {
+        return password;
     }
 
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public List<Pasta> getPastas() {
-        return pastas;
-    }
-
-    public void setPastas(List<Pasta> pastas) {
-        this.pastas = pastas;
-    }
-
-    public List<Nota> getNotas() {
-        return notas;
-    }
-
-    public void setNotas(List<Nota> notas) {
-        this.notas = notas;
-    }
-
-    public List<Tag> getTags() {
-        return tags;
-    }
-
-    public void setTags(List<Tag> tags) {
-        this.tags = tags;
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

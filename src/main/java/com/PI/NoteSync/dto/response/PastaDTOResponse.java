@@ -1,10 +1,12 @@
 package com.PI.NoteSync.dto.response;
 
-
-import com.PI.NoteSync.entity.Usuario;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.List;
+
+// Importe os DTOs, NÃO as Entidades
+import com.PI.NoteSync.dto.response.UsuarioDTOResponse;
+import com.PI.NoteSync.dto.response.NotaDTOResponse;
 
 public class PastaDTOResponse {
 
@@ -13,57 +15,31 @@ public class PastaDTOResponse {
     private String descricao;
     private LocalDateTime dataDeCriacao;
 
+    // MUDANÇA CRÍTICA: Tipo mudou de Usuario para UsuarioDTOResponse
+    @JsonIgnoreProperties({"pastas", "notas", "tags"})
+    private UsuarioDTOResponse usuario;
 
-    private Usuario usuario;
-
-
+    // Lista de notas (Use DTO)
+    @JsonIgnoreProperties({"pasta", "usuario", "tags"})
     private List<NotaDTOResponse> notas;
 
-    public int getId() {
-        return id;
-    }
+    // --- GETTERS E SETTERS (Atualizados) ---
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public String getNome() {
-        return nome;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public String getDescricao() {
-        return descricao;
-    }
+    public LocalDateTime getDataDeCriacao() { return dataDeCriacao; }
+    public void setDataDeCriacao(LocalDateTime dataDeCriacao) { this.dataDeCriacao = dataDeCriacao; }
 
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
+    public UsuarioDTOResponse getUsuario() { return usuario; }
+    public void setUsuario(UsuarioDTOResponse usuario) { this.usuario = usuario; }
 
-    public LocalDateTime getDataDeCriacao() {
-        return dataDeCriacao;
-    }
-
-    public void setDataDeCriacao(LocalDateTime dataDeCriacao) {
-        this.dataDeCriacao = dataDeCriacao;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-
-    public List<NotaDTOResponse> getNotas() {
-        return notas;
-    }
-
-    public void setNotas(List<NotaDTOResponse> notas) {
-        this.notas = notas;
-    }
+    public List<NotaDTOResponse> getNotas() { return notas; }
+    public void setNotas(List<NotaDTOResponse> notas) { this.notas = notas; }
 }

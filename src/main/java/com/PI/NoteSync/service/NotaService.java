@@ -9,35 +9,30 @@ import com.PI.NoteSync.entity.Pasta;
 import com.PI.NoteSync.entity.Tag;
 import com.PI.NoteSync.entity.Usuario;
 import com.PI.NoteSync.repository.NotaRepository;
-// CORREÇÃO: Adicionar os repositórios necessários para buscar as entidades relacionadas
 import com.PI.NoteSync.repository.PastaRepository;
 import com.PI.NoteSync.repository.TagRepository;
 import com.PI.NoteSync.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class NotaService {
 
     private final NotaRepository notaRepository;
-    // CORREÇÃO: Injetar os outros repositórios
     private final UsuarioRepository usuarioRepository;
     private final PastaRepository pastaRepository;
     private final TagRepository tagRepository;
 
-
     @Autowired
     private ModelMapper modelMapper;
 
-    // CORREÇÃO: Construtor atualizado com as novas dependências
     public NotaService(NotaRepository notaRepository, UsuarioRepository usuarioRepository, PastaRepository pastaRepository, TagRepository tagRepository) {
         this.notaRepository = notaRepository;
         this.usuarioRepository = usuarioRepository;
@@ -45,8 +40,6 @@ public class NotaService {
         this.tagRepository = tagRepository;
     }
 
-    // CORREÇÃO: O método original não funcionava. Agora ele lista TODAS as notas.
-    // Se a intenção era listar por usuário, um `usuarioId` deveria ser passado como parâmetro.
     public List<Nota> listarNotas() {
         return this.notaRepository.findAll();
     }
@@ -56,58 +49,76 @@ public class NotaService {
                 .orElseThrow(() -> new EntityNotFoundException("Nota não encontrada com id: " + notaId));
     }
 
-    public NotaDTOResponse criarNota(@Valid NotaDTORequest notaDTORequest) {
-        Nota nota = modelMapper.map(notaDTORequest, Nota.class);
+    // MUDANÇA: Agora recebe o email do usuário logado (token)
+    public NotaDTOResponse criarNota(NotaDTORequest notaDTO, String emailUsuario) {
+        Nota nota = new Nota();
 
-        // CORREÇÃO: Lógica ESSENCIAL para buscar as entidades no banco e associá-las.
-        // Sem isso, o JPA não consegue salvar os relacionamentos.
-        Usuario usuario = usuarioRepository.findById(notaDTORequest.getUsuario().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
-        nota.setUsuario(usuario);
+        // 1. Mapeia dados simples
+        nota.setTitulo(notaDTO.getTitulo());
+        nota.setConteudo(notaDTO.getConteudo());
+        nota.setDataDeCriacao(LocalDateTime.now());
+        // Se tiver data de edição na criação, pode setar também
+        // nota.setDataDeEdicao(LocalDateTime.now());
 
-        if (notaDTORequest.getPasta() != null && notaDTORequest.getPasta().getId() != 0) {
-            Pasta pasta = pastaRepository.findById(notaDTORequest.getPasta().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Pasta não encontrada"));
+        // 2. Busca e define a Pasta pelo ID (pastaId)
+        if (notaDTO.getPastaId() != null) {
+            Pasta pasta = pastaRepository.findById(notaDTO.getPastaId())
+                    .orElseThrow(() -> new EntityNotFoundException("Pasta não encontrada com ID: " + notaDTO.getPastaId()));
             nota.setPasta(pasta);
         }
 
-        if (notaDTORequest.getTags() != null && !notaDTORequest.getTags().isEmpty()) {
-            Set<Integer> tagIds = notaDTORequest.getTags().stream().map(Tag::getId).collect(Collectors.toSet());
-            List<Tag> tagsEncontradas = tagRepository.findAllById(tagIds);
-            nota.setTags(new HashSet<>(tagsEncontradas));
+        // 3. Busca e define as Tags pelos IDs (tagIds)
+        if (notaDTO.getTagIds() != null && !notaDTO.getTagIds().isEmpty()) {
+            List<Tag> tags = tagRepository.findAllById(notaDTO.getTagIds());
+            nota.setTags(new HashSet<>(tags));
         }
 
+        // 4. Define o Usuário (Dono da nota) baseado no Token
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário logado não encontrado no banco."));
+        nota.setUsuario(usuario);
+
+        // 5. Salva e Retorna
         Nota notaSalva = this.notaRepository.save(nota);
         return modelMapper.map(notaSalva, NotaDTOResponse.class);
     }
 
     public NotaDTOResponse atualizarNota(Integer notaId, NotaDTORequest notaDTORequest) {
-        Nota nota = this.listarPorNotaId(notaId); // Reutiliza o método que já lança exceção se não encontrar
+        Nota nota = this.listarPorNotaId(notaId);
 
-        // O modelMapper já atualiza os campos simples (titulo, conteudo)
-        modelMapper.map(notaDTORequest, nota);
+        // Atualiza campos simples
+        nota.setTitulo(notaDTORequest.getTitulo());
+        nota.setConteudo(notaDTORequest.getConteudo());
+        nota.setDataDeEdicao(LocalDateTime.now());
 
-        // CORREÇÃO: A lógica de associação de entidades também é necessária na atualização
-        Usuario usuario = usuarioRepository.findById(notaDTORequest.getUsuario().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
-        nota.setUsuario(usuario);
+        // Atualiza Pasta se o ID mudou
+        if (notaDTORequest.getPastaId() != null) {
+            Pasta pasta = pastaRepository.findById(notaDTORequest.getPastaId())
+                    .orElseThrow(() -> new EntityNotFoundException("Pasta não encontrada"));
+            nota.setPasta(pasta);
+        }
 
-        // A mesma lógica de `criarNota` se aplica aqui para Pasta e Tags...
+        // Atualiza Tags se a lista mudou
+        if (notaDTORequest.getTagIds() != null) {
+            List<Tag> tags = tagRepository.findAllById(notaDTORequest.getTagIds());
+            nota.setTags(new HashSet<>(tags));
+        }
 
-        Nota tempResponse = notaRepository.save(nota);
-        return modelMapper.map(tempResponse, NotaDTOResponse.class);
+        Nota notaSalva = notaRepository.save(nota);
+        return modelMapper.map(notaSalva, NotaDTOResponse.class);
     }
 
     public NotaDTOUpdateResponse atualizarParcialmenteNota(Integer notaId, NotaDTOUpdateRequest notaDTOUpdateRequest) {
         Nota nota = this.listarPorNotaId(notaId);
 
-        // Atualiza apenas os campos que não são nulos no DTO
         if (notaDTOUpdateRequest.getTitulo() != null) {
             nota.setTitulo(notaDTOUpdateRequest.getTitulo());
         }
         if (notaDTOUpdateRequest.getConteudo() != null) {
             nota.setConteudo(notaDTOUpdateRequest.getConteudo());
         }
+
+        nota.setDataDeEdicao(LocalDateTime.now());
 
         Nota tempResponse = notaRepository.save(nota);
         return modelMapper.map(tempResponse, NotaDTOUpdateResponse.class);

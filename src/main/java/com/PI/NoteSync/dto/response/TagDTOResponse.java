@@ -1,8 +1,9 @@
 package com.PI.NoteSync.dto.response;
 
-// CORREÇÃO: Importar o DTO de Nota em vez da Entidade
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // Importante
 import com.PI.NoteSync.dto.response.NotaDTOResponse;
-import com.PI.NoteSync.entity.Usuario;
+// MUDANÇA: Importar DTO, não Entidade
+import com.PI.NoteSync.dto.response.UsuarioDTOResponse;
 
 import java.util.Set;
 
@@ -12,8 +13,15 @@ public class TagDTOResponse {
     private String nome;
 
     // Relacionamentos
-    private Usuario usuario;
 
+    // MUDANÇA 1: Usar UsuarioDTOResponse
+    // Ignora as listas do usuário para não voltar para Tag
+    @JsonIgnoreProperties({"tags", "pastas", "notas"})
+    private UsuarioDTOResponse usuario;
+
+    // MUDANÇA 2: Nas notas, ignora 'tags' para não voltar pra cá (loop infinito)
+    // Também ignoramos 'usuario' e 'pasta' para deixar o JSON mais limpo
+    @JsonIgnoreProperties({"tags", "usuario", "pasta"})
     private Set<NotaDTOResponse> notas;
 
 
@@ -33,11 +41,12 @@ public class TagDTOResponse {
         this.nome = nome;
     }
 
-    public Usuario getUsuario() {
+    // Ajuste o Getter/Setter para o tipo novo (UsuarioDTOResponse)
+    public UsuarioDTOResponse getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(Usuario usuario) {
+    public void setUsuario(UsuarioDTOResponse usuario) {
         this.usuario = usuario;
     }
 

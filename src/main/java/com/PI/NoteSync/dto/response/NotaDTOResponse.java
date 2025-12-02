@@ -1,11 +1,14 @@
 package com.PI.NoteSync.dto.response;
 
-import com.PI.NoteSync.entity.Pasta;
-import com.PI.NoteSync.entity.Tag;
-import com.PI.NoteSync.entity.Usuario;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.Set;
+
+// MUDANÇA CRÍTICA: Não importe com.PI.NoteSync.entity.Usuario !!!
+// Importe apenas os DTOs
+import com.PI.NoteSync.dto.response.UsuarioDTOResponse;
+import com.PI.NoteSync.dto.response.PastaDTOResponse;
+import com.PI.NoteSync.dto.response.TagDTOResponse;
 
 public class NotaDTOResponse {
 
@@ -15,73 +18,51 @@ public class NotaDTOResponse {
     private LocalDateTime dataDeCriacao;
     private LocalDateTime dataDeEdicao;
 
-    // Relacionamentos
-    private Usuario usuario;
-    private Pasta pasta;
-    private Set<Tag> tags;
+    // --- RELACIONAMENTOS ---
 
-    // Getters e Setters
-    public int getId() {
-        return id;
-    }
+    // ERRO ANTERIOR: private Usuario usuario;
+    // CORREÇÃO: Usar o DTO e bloquear as listas dele para não ter loop
+    @JsonIgnoreProperties({"pastas", "notas", "tags"})
+    private UsuarioDTOResponse usuario;
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    // ERRO ANTERIOR: private Pasta pasta;
+    // CORREÇÃO: Usar o DTO e bloquear notas/usuario da pasta
+    @JsonIgnoreProperties({"notas", "usuario"})
+    private PastaDTOResponse pasta;
 
-    public String getTitulo() {
-        return titulo;
-    }
+    // ERRO ANTERIOR: private Set<Tag> tags;
+    // CORREÇÃO: Usar o DTO de Tag
+    @JsonIgnoreProperties({"notas", "usuario"})
+    private Set<TagDTOResponse> tags;
 
-    public void setTitulo(String titulo) {
-        this.titulo = titulo;
-    }
 
-    public String getConteudo() {
-        return conteudo;
-    }
+    // --- GETTERS E SETTERS ---
+    // ATENÇÃO: Atualize os tipos nos Getters e Setters também!
 
-    public void setConteudo(String conteudo) {
-        this.conteudo = conteudo;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public LocalDateTime getDataDeCriacao() {
-        return dataDeCriacao;
-    }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
 
-    public void setDataDeCriacao(LocalDateTime dataDeCriacao) {
-        this.dataDeCriacao = dataDeCriacao;
-    }
+    public String getConteudo() { return conteudo; }
+    public void setConteudo(String conteudo) { this.conteudo = conteudo; }
 
-    public LocalDateTime getDataDeEdicao() {
-        return dataDeEdicao;
-    }
+    public LocalDateTime getDataDeCriacao() { return dataDeCriacao; }
+    public void setDataDeCriacao(LocalDateTime dataDeCriacao) { this.dataDeCriacao = dataDeCriacao; }
 
-    public void setDataDeEdicao(LocalDateTime dataDeEdicao) {
-        this.dataDeEdicao = dataDeEdicao;
-    }
+    public LocalDateTime getDataDeEdicao() { return dataDeEdicao; }
+    public void setDataDeEdicao(LocalDateTime dataDeEdicao) { this.dataDeEdicao = dataDeEdicao; }
 
-    public Usuario getUsuario() {
-        return usuario;
-    }
+    // MUDANÇA DE TIPO AQUI
+    public UsuarioDTOResponse getUsuario() { return usuario; }
+    public void setUsuario(UsuarioDTOResponse usuario) { this.usuario = usuario; }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
+    // MUDANÇA DE TIPO AQUI
+    public PastaDTOResponse getPasta() { return pasta; }
+    public void setPasta(PastaDTOResponse pasta) { this.pasta = pasta; }
 
-    public Pasta getPasta() {
-        return pasta;
-    }
-
-    public void setPasta(Pasta pasta) {
-        this.pasta = pasta;
-    }
-
-    public Set<Tag> getTags() {
-        return tags;
-    }
-
-    public void setTags(Set<Tag> tags) {
-        this.tags = tags;
-    }
+    // MUDANÇA DE TIPO AQUI
+    public Set<TagDTOResponse> getTags() { return tags; }
+    public void setTags(Set<TagDTOResponse> tags) { this.tags = tags; }
 }

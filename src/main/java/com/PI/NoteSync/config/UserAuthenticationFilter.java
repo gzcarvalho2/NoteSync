@@ -1,6 +1,5 @@
 package com.PI.NoteSync.config;
 
-
 import com.PI.NoteSync.entity.Usuario;
 import com.PI.NoteSync.repository.UsuarioRepository;
 import com.PI.NoteSync.service.JwtTokenService;
@@ -11,47 +10,59 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Optional;
 
 @Component
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JwtTokenService jwtTokenService; // Service que definimos anteriormente
+    private JwtTokenService jwtTokenService;
 
     @Autowired
-    private UsuarioRepository usuarioRepository; // Repository que definimos anteriormente
+    private UsuarioRepository usuarioRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // Verifica se o endpoint requer autenticação antes de processar a requisição
-        if (checkIfEndpointIsNotPublic(request)) {
-            String token = recoveryToken(request); // Recupera o token do cabeçalho Authorization da requisição
-            if (token != null) {
-                String subject = jwtTokenService.getSubjectFromToken(token); // Obtém o assunto (neste caso, o nome de usuário) do token
-                Usuario usuario = usuarioRepository.findByEmail(subject).get(); // Busca o usuário pelo email (que é o assunto do token)
-                UserDetailsImpl userDetails = new UserDetailsImpl(usuario); // Cria um UserDetails com o usuário encontrado
+        String token = recoveryToken(request);
 
-                // Cria um objeto de autenticação do Spring Security
-                Authentication authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails.getUsername(), null, userDetails.getAuthorities());
+        if (token != null) {
+            try {
+                System.out.println("1. Token recebido: " + token.substring(0, 10) + "..."); // Imprime o começo do token
 
-                // Define o objeto de autenticação no contexto de segurança do Spring Security
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
-                throw new RuntimeException("O token está ausente.");
+                String subject = jwtTokenService.getSubjectFromToken(token);
+                System.out.println("2. Email extraído do token: " + subject);
+
+                Optional<Usuario> usuarioOptional = usuarioRepository.findByEmail(subject);
+
+                if (usuarioOptional.isPresent()) {
+                    System.out.println("3. Usuário encontrado no banco!");
+                    Usuario usuario = usuarioOptional.get();
+                    UserDetailsImpl userDetails = new UserDetailsImpl(usuario);
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    System.out.println("4. Autenticação realizada com sucesso.");
+                } else {
+                    System.out.println("ERRO: Usuário não encontrado no banco para o email: " + subject);
+                }
+            } catch (Exception e) {
+                System.out.println("ERRO CRÍTICO NO FILTRO: " + e.getMessage());
+                e.printStackTrace(); // Mostra o erro real no console
             }
+        } else {
+            System.out.println("Aviso: Nenhum token encontrado no Header.");
         }
-        filterChain.doFilter(request, response); // Continua o processamento da requisição
+
+        filterChain.doFilter(request, response);
     }
 
-    // Recupera o token do cabeçalho Authorization da requisição
     private String recoveryToken(HttpServletRequest request) {
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null) {
@@ -59,14 +70,4 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
         return null;
     }
-
-    // Verifica se o endpoint requer autenticação antes de processar a requisição
-    private boolean checkIfEndpointIsNotPublic(HttpServletRequest request) {
-        //ajustado para funcionamento do swagger
-        String requestURI = request.getRequestURI();
-        return Arrays.stream(SecurityConfiguration.ENDPOINTS_WITH_AUTHENTICATION_NOT_REQUIRED).noneMatch(publicEndpoint ->
-                requestURI.startsWith(publicEndpoint.replace("/**", "")) // suporta wildcard
-        );
-    }
-
 }

@@ -1,6 +1,5 @@
 package com.PI.NoteSync.config;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,9 +22,9 @@ public class SecurityConfiguration {
     private UserAuthenticationFilter userAuthenticationFilter;
 
     public static final String [] ENDPOINTS_WITH_AUTHENTICATION_NOT_REQUIRED = {
-            "/users/login", // Url que usaremos para fazer login
-            "/users", // Url que usaremos para criar um usuário
-            "/h2-console",
+            "/users/login", // Endpoint de login
+            "/users",       // Endpoint de criação de usuário (registro)
+            "/h2-console/**", // Adicionei /** para garantir acesso a todos os recursos do H2
             // 🔓 Swagger/OpenAPI UI
             "/v3/api-docs/**",
             "/swagger-ui/**",
@@ -37,12 +36,12 @@ public class SecurityConfiguration {
             "/users/test"
     };
 
-    // Endpoints que só podem ser acessador por usuários com permissão de cliente
+    // Endpoints que só podem ser acessados por usuários com permissão de cliente
     public static final String [] ENDPOINTS_CUSTOMER = {
             "/users/test/customer"
     };
 
-    // Endpoints que só podem ser acessador por usuários com permissão de administrador
+    // Endpoints que só podem ser acessados por usuários com permissão de administrador
     public static final String [] ENDPOINTS_ADMIN = {
             "/users/test/administrator"
     };
@@ -50,16 +49,20 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(csrf -> csrf.disable()) // Desabilita CSRF (padrão para APIs REST stateless)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Define como Stateless (sem sessão no servidor)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(ENDPOINTS_WITH_AUTHENTICATION_NOT_REQUIRED).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() //adicionado para funcionamento do swagger
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Permite pre-flight requests (CORS/Swagger)
                         .requestMatchers(ENDPOINTS_ADMIN).hasRole("ADMINISTRATOR")
                         .requestMatchers(ENDPOINTS_CUSTOMER).hasRole("CUSTOMER")
                         .requestMatchers(ENDPOINTS_WITH_AUTHENTICATION_REQUIRED).authenticated()
-                        .anyRequest().denyAll()
+                        // MUDANÇA IMPORTANTE AQUI:
+                        // "authenticated()" permite que qualquer outra rota (como /notas, /pastas)
+                        // seja acessada se o token for válido. "denyAll()" bloquearia tudo.
+                        .anyRequest().authenticated()
                 )
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // Necessário para o H2 Console abrir
                 .addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -74,5 +77,4 @@ public class SecurityConfiguration {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }

@@ -5,47 +5,57 @@ import com.PI.NoteSync.dto.request.PastaDTOUpdateRequest;
 import com.PI.NoteSync.dto.response.PastaDTOResponse;
 import com.PI.NoteSync.dto.response.PastaDTOUpdateResponse;
 import com.PI.NoteSync.entity.Pasta;
-import com.PI.NoteSync.entity.Usuario; // CORREÇÃO: Importar a entidade Usuario
+import com.PI.NoteSync.entity.Usuario;
 import com.PI.NoteSync.repository.PastaRepository;
-import com.PI.NoteSync.repository.UsuarioRepository; // CORREÇÃO: Importar o repositório de Usuario
-import jakarta.persistence.EntityNotFoundException; // CORREÇÃO: Importar exceção para erro 404
+import com.PI.NoteSync.repository.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class PastaService {
 
     private final PastaRepository pastaRepository;
-    private final UsuarioRepository usuarioRepository; // CORREÇÃO: Injetar repositório de usuário
+    private final UsuarioRepository usuarioRepository;
 
     @Autowired
     private ModelMapper modelMapper;
 
-    // CORREÇÃO: Atualizar construtor
     public PastaService(PastaRepository pastaRepository, UsuarioRepository usuarioRepository){
         this.pastaRepository = pastaRepository;
         this.usuarioRepository = usuarioRepository;
     }
 
+    // Se quiser, futuramente pode mudar aqui para listar por email também
     public List<Pasta> listarPastas(Integer usuarioId){
         return this.pastaRepository.listarPastasPorUsuario(usuarioId);
     }
 
     public Pasta listarPorPastaId(Integer pastaId){
-        // CORREÇÃO: Lançar exceção se não encontrar, para um melhor tratamento de erro no controller
         return this.pastaRepository.findById(pastaId)
                 .orElseThrow(() -> new EntityNotFoundException("Pasta não encontrada com o ID: " + pastaId));
     }
 
-    public PastaDTOResponse criarPasta(PastaDTORequest pastaDTORequest){
+    // MUDANÇA CRÍTICA: Recebe o email do usuário logado
+    public PastaDTOResponse criarPasta(PastaDTORequest pastaDTORequest, String emailUsuario){
+        // 1. Converte DTO para Entidade
         Pasta pasta = modelMapper.map(pastaDTORequest, Pasta.class);
 
-        // CORREÇÃO: Lógica ESSENCIAL para buscar o usuário no banco e associá-lo à pasta.
-        Usuario usuario = usuarioRepository.findById(pastaDTORequest.getUsuario().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com o ID: " + pastaDTORequest.getUsuario().getId()));
+        // 2. Define a data atual
+        pasta.setDataDeCriacao(LocalDateTime.now());
+
+
+        pasta.setStatus(1); // Define como Ativa por padrão
+
+        // 3. Busca o usuário pelo EMAIL do token (Segurança: garante que é o usuário logado)
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário logado não encontrado no banco."));
+
+        // 4. Associa
         pasta.setUsuario(usuario);
 
         Pasta pastaSalva = this.pastaRepository.save(pasta);
@@ -53,17 +63,13 @@ public class PastaService {
     }
 
     public PastaDTOResponse atualizarPasta(Integer pastaId, PastaDTORequest pastaDTORequest) {
-        Pasta pastaExistente = this.listarPorPastaId(pastaId); // Reutiliza o método que já lança exceção
+        Pasta pastaExistente = this.listarPorPastaId(pastaId);
 
-        // O modelMapper atualiza os campos (nome, descricao)
+        // O modelMapper atualiza os campos simples (nome, descricao)
         modelMapper.map(pastaDTORequest, pastaExistente);
 
-        // CORREÇÃO: A lógica de associação de usuário também é necessária na atualização
-        if (pastaDTORequest.getUsuario() != null) {
-            Usuario usuario = usuarioRepository.findById(pastaDTORequest.getUsuario().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
-            pastaExistente.setUsuario(usuario);
-        }
+        // REMOVIDO: Não tentamos mais atualizar o usuário aqui,
+        // pois o DTO não traz essa informação e pasta não costuma mudar de dono assim.
 
         Pasta tempResponse = pastaRepository.save(pastaExistente);
         return modelMapper.map(tempResponse, PastaDTOResponse.class);
@@ -84,7 +90,6 @@ public class PastaService {
     }
 
     public void apagarPasta(Integer pastaId){
-        // CORREÇÃO: Verificar se a pasta existe antes de tentar apagar
         if (!pastaRepository.existsById(pastaId)) {
             throw new EntityNotFoundException("Pasta não encontrada com o ID: " + pastaId);
         }

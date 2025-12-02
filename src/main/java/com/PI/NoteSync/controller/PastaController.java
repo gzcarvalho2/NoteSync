@@ -9,13 +9,14 @@ import com.PI.NoteSync.service.PastaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.modelmapper.ModelMapper; // CORREÇÃO: Importar ModelMapper
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal; // IMPORTANTE: Importar Principal
 import java.util.List;
-import java.util.stream.Collectors; // CORREÇÃO: Importar Collectors
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/pasta")
@@ -23,9 +24,8 @@ import java.util.stream.Collectors; // CORREÇÃO: Importar Collectors
 public class PastaController {
 
     private final PastaService pastaService;
-    private final ModelMapper modelMapper; // CORREÇÃO: Injetar ModelMapper
+    private final ModelMapper modelMapper;
 
-    // CORREÇÃO: Atualizar construtor
     public PastaController(PastaService pastaService, ModelMapper modelMapper) {
         this.pastaService = pastaService;
         this.modelMapper = modelMapper;
@@ -33,7 +33,6 @@ public class PastaController {
 
     @GetMapping("/listar")
     @Operation(summary = "Listar pastas por usuário", description = "Endpoint para listar todas as pastas de um usuário específico")
-    // CORREÇÃO: Retornar uma lista de DTOs e receber o ID do usuário como parâmetro
     public ResponseEntity<List<PastaDTOResponse>> listarPastas(@RequestParam Integer usuarioId){
         List<Pasta> pastas = pastaService.listarPastas(usuarioId);
         List<PastaDTOResponse> response = pastas.stream()
@@ -44,17 +43,18 @@ public class PastaController {
 
     @GetMapping("/listarPorId/{pastaId}")
     @Operation(summary = "Listar pasta pelo ID", description = "Endpoint para obter Pasta pelo seu id")
-    // CORREÇÃO: Retornar o DTO de resposta para evitar o loop de relacionamento
     public ResponseEntity<PastaDTOResponse> listarPorPastaId(@PathVariable("pastaId") Integer pastaId) {
         Pasta pasta = pastaService.listarPorPastaId(pastaId);
-        // A verificação de nulo não é mais necessária, pois o service lança uma exceção
         return ResponseEntity.ok(modelMapper.map(pasta, PastaDTOResponse.class));
     }
 
+    // --- MUDANÇA PRINCIPAL AQUI ---
     @PostMapping("/criar")
     @Operation(summary = "Criar nova Pasta", description = "Endpoint para criar um novo registro de Pasta")
-    public ResponseEntity<PastaDTOResponse> criarPasta(@Valid @RequestBody PastaDTORequest pasta){
-        return ResponseEntity.status(HttpStatus.CREATED).body(pastaService.criarPasta(pasta));
+    public ResponseEntity<PastaDTOResponse> criarPasta(@Valid @RequestBody PastaDTORequest pasta, Principal principal){
+        // Pega o email do token (principal.getName()) e passa para o serviço
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(pastaService.criarPasta(pasta, principal.getName()));
     }
 
     @PutMapping("/atualizar/{pastaId}")
@@ -73,7 +73,6 @@ public class PastaController {
 
     @DeleteMapping("/apagar/{pastaId}")
     @Operation(summary = "Apagar registro de pasta", description = "Endpoint para apagar uma pasta")
-    // CORREÇÃO: ResponseEntity<Void> é um tipo de retorno mais explícito para 'no content'
     public ResponseEntity<Void> apagarPasta(@PathVariable("pastaId") Integer pastaId){
         pastaService.apagarPasta(pastaId);
         return ResponseEntity.noContent().build();

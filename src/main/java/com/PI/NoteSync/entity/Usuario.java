@@ -1,6 +1,7 @@
 package com.PI.NoteSync.entity;
 
 import jakarta.persistence.*;
+import java.util.ArrayList; // Importante
 import java.util.List;
 
 @Entity
@@ -14,7 +15,7 @@ public class Usuario {
     @Column(name = "usuario_nome")
     private String nome;
 
-    @Column(name = "usuario_email")
+    @Column(name = "usuario_email", unique = true) // Boa prática: email único
     private String email;
 
     @Column(name = "usuario_status")
@@ -22,8 +23,6 @@ public class Usuario {
 
     @Column(name = "usuario_senha")
     private String senha;
-
-    // CORREÇÃO: Campo 'senha' removido
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Pasta> pastas;
@@ -34,11 +33,14 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Tag> tags;
 
+    // CORREÇÃO CRÍTICA: Inicializar com ArrayList para evitar erro de "NullPointerException" no Login
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
-    @JoinTable(name="users_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
+    @JoinTable(name="usuario_role",
+            // Verifique também se as colunas no banco são 'user_id' e 'role_id'
+            // Se no banco for 'usuario_id', mude aqui também!
+            joinColumns = @JoinColumn(name = "usuario_id"), // Geralmente segue o nome da PK
             inverseJoinColumns = @JoinColumn(name="role_id"))
-    private List<Role> roles;
+    private List<Role> roles = new ArrayList<>(); // <--- MUDANÇA AQUI
 
     // Getters e Setters
     public int getId() {
@@ -72,8 +74,6 @@ public class Usuario {
     public void setStatus(int status) {
         this.status = status;
     }
-
-    // CORREÇÃO: Getters e Setters de 'senha' removidos
 
     public List<Pasta> getPastas() {
         return pastas;

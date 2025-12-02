@@ -9,13 +9,12 @@ import com.PI.NoteSync.service.NotaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
-// CORREÇÃO: Adicionar ModelMapper para converter a lista de Entidade para DTO
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal; // IMPORTANTE: Importar Principal
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
 public class NotaController {
 
     private final NotaService notaService;
-    // CORREÇÃO: Adicionar ModelMapper para conversões
     private final ModelMapper modelMapper;
 
     public NotaController(NotaService notaService, ModelMapper modelMapper) {
@@ -35,7 +33,6 @@ public class NotaController {
 
     @GetMapping("/listar")
     @Operation(summary = "Listar notas", description = "Endpoint para listar todas as notas")
-    // CORREÇÃO: Retornar uma lista de DTOs para evitar o erro de relacionamento circular
     public ResponseEntity<List<NotaDTOResponse>> listarNotas() {
         List<Nota> notas = notaService.listarNotas();
         List<NotaDTOResponse> response = notas.stream()
@@ -46,17 +43,22 @@ public class NotaController {
 
     @GetMapping("/listarPorId/{notaId}")
     @Operation(summary = "Listar nota pelo ID", description = "Endpoint para obter Nota pelo seu id")
-    // CORREÇÃO: Retornar DTO em vez da entidade
     public ResponseEntity<NotaDTOResponse> listarPorNotaId(@PathVariable("notaId") Integer notaId) {
         Nota nota = notaService.listarPorNotaId(notaId);
-        // O service agora lança uma exceção se não encontrar, então a verificação de nulo não é mais necessária aqui
         return ResponseEntity.ok(modelMapper.map(nota, NotaDTOResponse.class));
     }
 
+    // --- MUDANÇA PRINCIPAL AQUI ---
     @PostMapping("/criar")
     @Operation(summary = "Criar nova Nota", description = "Endpoint para criar um novo registro de Nota")
-    public ResponseEntity<NotaDTOResponse> criarNota(@Valid @RequestBody NotaDTORequest nota) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(notaService.criarNota(nota));
+    public ResponseEntity<NotaDTOResponse> criarNota(@Valid @RequestBody NotaDTORequest nota, Principal principal) {
+        // principal.getName() recupera o email do token (Subject)
+        String emailUsuario = principal.getName();
+
+        // Passamos o DTO e o Email para o serviço
+        NotaDTOResponse novaNota = notaService.criarNota(nota, emailUsuario);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(novaNota);
     }
 
     @PutMapping("/atualizar/{notaId}")

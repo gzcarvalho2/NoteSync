@@ -1,33 +1,21 @@
 package com.PI.NoteSync.dto.request;
 
-import com.PI.NoteSync.entity.Pasta;
-import com.PI.NoteSync.entity.Tag;
-import com.PI.NoteSync.entity.Usuario;
-
-import java.time.LocalDateTime;
 import java.util.Set;
 
 public class NotaDTORequest {
 
-    private int id;
+    // Não precisamos do ID aqui (é gerado no banco)
+
     private String titulo;
     private String conteudo;
-    private LocalDateTime dataDeCriacao;
-    private LocalDateTime dataDeEdicao;
 
-    // Relacionamentos
-    private Usuario usuario;
-    private Pasta pasta;
-    private Set<Tag> tags;
+    // MUDANÇA CRÍTICA: Recebemos apenas o ID da pasta
+    private Integer pastaId;
 
-    // Getters e Setters
-    public int getId() {
-        return id;
-    }
+    // MUDANÇA CRÍTICA: Recebemos apenas os IDs das tags (opcional)
+    private Set<Integer> tagIds;
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    // --- Getters e Setters ---
 
     public String getTitulo() {
         return titulo;
@@ -45,43 +33,19 @@ public class NotaDTORequest {
         this.conteudo = conteudo;
     }
 
-    public LocalDateTime getDataDeCriacao() {
-        return dataDeCriacao;
+    public Integer getPastaId() {
+        return pastaId;
     }
 
-    public void setDataDeCriacao(LocalDateTime dataDeCriacao) {
-        this.dataDeCriacao = dataDeCriacao;
+    public void setPastaId(Integer pastaId) {
+        this.pastaId = pastaId;
     }
 
-    public LocalDateTime getDataDeEdicao() {
-        return dataDeEdicao;
+    public Set<Integer> getTagIds() {
+        return tagIds;
     }
 
-    public void setDataDeEdicao(LocalDateTime dataDeEdicao) {
-        this.dataDeEdicao = dataDeEdicao;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-
-    public Pasta getPasta() {
-        return pasta;
-    }
-
-    public void setPasta(Pasta pasta) {
-        this.pasta = pasta;
-    }
-
-    public Set<Tag> getTags() {
-        return tags;
-    }
-
-    public void setTags(Set<Tag> tags) {
-        this.tags = tags;
+    public void setTagIds(Set<Integer> tagIds) {
+        this.tagIds = tagIds;
     }
 }
