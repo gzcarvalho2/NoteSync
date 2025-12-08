@@ -42,6 +42,8 @@ public class TagService {
     public TagDTOResponse criarTag(TagDTORequest tagDTO, String emailUsuario) {
         Tag tag = modelMapper.map(tagDTO, Tag.class);
 
+        tag.setStatus(1);
+
         // Busca o usuário pelo Email do Token
         Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário logado não encontrado no banco."));

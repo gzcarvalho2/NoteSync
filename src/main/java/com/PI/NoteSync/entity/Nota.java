@@ -1,6 +1,8 @@
 package com.PI.NoteSync.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -10,97 +12,63 @@ public class Nota {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "nota_id")
+    @Column(name = "nota_id") // Mapeamento correto
     private int id;
 
-    @Column(name = "nota_titulo")
+    @Column(name = "nota_titulo") // Mapeamento correto
     private String titulo;
 
-    @Column(name = "nota_conteudo")
+    @Column(name = "nota_conteudo") // Mapeamento correto
     private String conteudo;
 
-    @Column(name = "nota_datadecriacao")
+    // --- NOVO CAMPO OBRIGATÓRIO ---
+    @Column(name = "nota_status")
+    private Integer status;
+    // ------------------------------
+
+    @CreationTimestamp
+    @Column(name = "nota_datadecriacao", updatable = false)
     private LocalDateTime dataDeCriacao;
 
+    @UpdateTimestamp
     @Column(name = "nota_datadeedicao")
     private LocalDateTime dataDeEdicao;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id") // Verifique se é usuario_id ou user_id
     private Usuario usuario;
 
-    @ManyToOne
-    @JoinColumn(name = "pasta_id", nullable = true) // nullable = true permite notas sem pasta
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pasta_id") // Verifique se é pasta_id
     private Pasta pasta;
 
     @ManyToMany
     @JoinTable(
-            name = "tag_nota",
+            name = "tag_nota", // Verifique se existe essa tabela intermediária
             joinColumns = @JoinColumn(name = "nota_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
     private Set<Tag> tags;
 
-    public int getId() {
-        return id;
-    }
+    // --- Getters e Setters ---
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
 
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public void setTitulo(String titulo) {
-        this.titulo = titulo;
-    }
-
-    public String getConteudo() {
-        return conteudo;
-    }
-
-    public void setConteudo(String conteudo) {
-        this.conteudo = conteudo;
-    }
-
-    public LocalDateTime getDataDeCriacao() {
-        return dataDeCriacao;
-    }
-
-    public void setDataDeCriacao(LocalDateTime dataDeCriacao) {
-        this.dataDeCriacao = dataDeCriacao;
-    }
-
-    public LocalDateTime getDataDeEdicao() {
-        return dataDeEdicao;
-    }
-
-    public void setDataDeEdicao(LocalDateTime dataDeEdicao) {
-        this.dataDeEdicao = dataDeEdicao;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-
-    public Pasta getPasta() {
-        return pasta;
-    }
-
-    public void setPasta(Pasta pasta) {
-        this.pasta = pasta;
-    }
-
-    public Set<Tag> getTags() {
-        return tags;
-    }
-
-    public void setTags(Set<Tag> tags) {
-        this.tags = tags;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
+    public String getConteudo() { return conteudo; }
+    public void setConteudo(String conteudo) { this.conteudo = conteudo; }
+    public LocalDateTime getDataDeCriacao() { return dataDeCriacao; }
+    public void setDataDeCriacao(LocalDateTime dataDeCriacao) { this.dataDeCriacao = dataDeCriacao; }
+    public LocalDateTime getDataDeEdicao() { return dataDeEdicao; }
+    public void setDataDeEdicao(LocalDateTime dataDeEdicao) { this.dataDeEdicao = dataDeEdicao; }
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
+    public Pasta getPasta() { return pasta; }
+    public void setPasta(Pasta pasta) { this.pasta = pasta; }
+    public Set<Tag> getTags() { return tags; }
+    public void setTags(Set<Tag> tags) { this.tags = tags; }
 }

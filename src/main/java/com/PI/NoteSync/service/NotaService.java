@@ -57,6 +57,8 @@ public class NotaService {
         nota.setTitulo(notaDTO.getTitulo());
         nota.setConteudo(notaDTO.getConteudo());
         nota.setDataDeCriacao(LocalDateTime.now());
+
+        nota.setStatus(1);
         // Se tiver data de edição na criação, pode setar também
         // nota.setDataDeEdicao(LocalDateTime.now());
 
