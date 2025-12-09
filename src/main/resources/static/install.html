@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteSync - Suas ideias, organizadas.</title>
+    <meta name="description" content="Capture notas, gerencie projetos e organize sua vida com NoteSync.">
+    <style>
+        /* --- Variáveis de Tema (Mesmas do App React Native) --- */
+        :root {
+            --bg-primary: #1A1D21;
+            --bg-secondary: #252A31;
+            --border-color: #3A414B;
+            --text-primary: #F0F0F0;
+            --text-secondary: #A0A0A0;
+            --accent-blue: #4A90E2;
+            --accent-hover: #357ABD;
+            --text-white: #FFFFFF;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* --- Reset Básico --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: 0.3s;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        /* --- Layout --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* --- Header / Nav --- */
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            background-color: rgba(26, 29, 33, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-white);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            margin-left: 30px;
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-blue);
+        }
+
+        .btn-cta-nav {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: var(--text-primary) !important;
+        }
+
+        .btn-cta-nav:hover {
+            border-color: var(--accent-blue);
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            padding: 100px 0 80px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #A0A0A0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background-color: var(--accent-blue);
+            color: var(--text-white);
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        /* --- Mockup Visual --- */
+        .app-preview {
+            margin-top: 60px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .preview-card {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* --- Features --- */
+        .features {
+            padding: 100px 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            transition: 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-5px);
+        }
+
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(74, 144, 226, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: var(--accent-blue);
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 10px;
+            color: var(--text-white);
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+        }
+
+        /* --- Download Area (QR Code) --- */
+        .download-section {
+            padding: 80px 0;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .download-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 50px;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .download-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .download-text h2 {
+            font-size: 2.5rem;
+            color: var(--text-white);
+            margin-bottom: 15px;
+        }
+
+        .download-text p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-download {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: var(--text-white);
+            color: var(--bg-primary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        .btn-download:hover {
+            background-color: #e0e0e0;
+        }
+
+        .qr-box {
+            background-color: var(--text-white);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .qr-box img {
+            width: 180px;
+            height: 180px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .qr-caption {
+            color: var(--bg-primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* --- Footer --- */
+        footer {
+            padding: 40px 0;
+            text-align: center;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        /* --- Icons SVG --- */
+        svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* --- Responsividade --- */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .nav-links { display: none; } /* Simples hide para mobile nesta versão pure */
+            .download-container { flex-direction: column; text-align: center; }
+            .download-buttons { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+    <div class="container">
+        <nav>
+            <a href="#" class="logo">
+                <!-- Ícone simples simulando logo -->
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                NoteSync
+            </a>
+            <div class="nav-links">
+                <a href="#features">Recursos</a>
+                <a href="#about">Sobre</a>
+                <a href="#download" class="btn-cta-nav">Baixar APK</a>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <h1>Suas ideias,<br>organizadas em um só lugar.</h1>
+        <p>Capture notas, gerencie projetos e sincronize tudo em tempo real. Minimalista, rápido e feito para você focar no que importa.</p>
+        <a href="#download" class="btn-primary">Começar Agora</a>
+
+        <!-- Visual Preview (CSS puro) -->
+        <div class="app-preview">
+            <div class="preview-grid">
+                <div class="preview-card">
+                    <div style="height: 10px; width: 40%; background: #3A414B; margin-bottom: 10px; border-radius: 4px;"></div>
+                    <div style="height: 8px; width: 80%; background: #252A31; margin-bottom: 5px; border-radius: 4px;"></div>
+                    <div style="height: 8px; width: 60%; background: #252A31; border-radius: 4px;"></div>
+                </div>
+                <div class="preview-card" style="border-color: var(--accent-blue);">
+                    <div style="height: 10px; width: 50%; background: var(--accent-blue); margin-bottom: 10px; border-radius: 4px;"></div>
+                    <div style="height: 8px; width: 90%; background: #252A31; margin-bottom: 5px; border-radius: 4px;"></div>
+                    <div style="height: 8px; width: 70%; background: #252A31; border-radius: 4px;"></div>
+                </div>
+                <div class="preview-card">
+                    <div style="height: 10px; width: 30%; background: #3A414B; margin-bottom: 10px; border-radius: 4px;"></div>
+                    <div style="height: 8px; width: 75%; background: #252A31; margin-bottom: 5px; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section id="features" class="features">
+    <div class="container">
+        <div class="features-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card">
+                <div class="icon-box">
+                    <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <h3>Organização Inteligente</h3>
+                <p>Crie pastas e organize suas notas hierarquicamente para manter seus projetos sempre em ordem.</p>
+            </div>
+            <!-- Feature 2 -->
+            <div class="feature-card">
+                <div class="icon-box">
+                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </div>
+                <h3>Editor Markdown</h3>
+                <p>Formate suas notas rapidamente com suporte completo a Markdown. Foco total na escrita.</p>
+            </div>
+            <!-- Feature 3 -->
+            <div class="feature-card">
+                <div class="icon-box">
+                    <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                </div>
+                <h3>Sincronização</h3>
+                <p>Seus dados salvos no servidor e disponíveis em qualquer dispositivo Android.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Download Section with QR Code -->
+<section id="download" class="download-section">
+    <div class="container">
+        <div class="download-container">
+            <div class="download-text">
+                <h2>Baixe o NoteSync hoje</h2>
+                <p>Disponível para Android. Instale o APK diretamente e comece a organizar sua vida.</p>
+                <div class="download-buttons">
+                    <!-- Botão de Download Direto -->
+                    <a href="https://drive.google.com/file/d/1wWUDVkIByzcRpWpIgWKq8l8--F6Ies0Z/view?usp=sharing" class="btn-download" download>
+                        <svg viewBox="0 0 24 24" style="stroke: #1A1D21;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Baixar APK (v1.0)
+                    </a>
+                </div>
+            </div>
+
+            <div class="qr-box">
+                <!--
+                    ATENÇÃO: Substitua 'https://seu-site.com/app.apk' pelo link real do seu APK.
+                    Esta API gera o QR Code automaticamente para o link que você colocar.
+                -->
+                <img
+                        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://drive.google.com/file/d/1wWUDVkIByzcRpWpIgWKq8l8--F6Ies0Z/view?usp=sharing"
+                        alt="QR Code para download"
+                >
+                <div class="qr-caption">Escaneie para baixar</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <p>&copy; 2024 NoteSync. Todos os direitos reservados.</p>
+    </div>
+</footer>
+
+</body>
+</html>

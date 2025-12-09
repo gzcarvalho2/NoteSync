@@ -33,7 +33,10 @@ public class SecurityConfiguration {
 
     // Endpoints que requerem autenticação para serem acessados
     public static final String [] ENDPOINTS_WITH_AUTHENTICATION_REQUIRED = {
-            "/users/test"
+            "/users/test",
+            "/install",
+            "/index.html",
+            "/install.html",
     };
 
     // Endpoints que só podem ser acessados por usuários com permissão de cliente
