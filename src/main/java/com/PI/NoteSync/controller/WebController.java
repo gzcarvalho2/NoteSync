@@ -13,9 +13,4 @@ public class WebController {
         return "forward:/index.html";
     }
 
-    @GetMapping("/install")
-    public String install() {
-        return "forward:/install.html";
-    }
-
 }
